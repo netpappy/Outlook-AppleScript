@@ -1,0 +1,25 @@
+(* The goal of this script is to create a new event with my WebEx (or other 
+meeting information) automatically populated. Just edit the line below to 
+include your meeting information. I then named my script mm, so I
+can type CMD-SPACE and type mm to invoke the script
+
+By Default it sets the meeting time for the next day at 12 PM *)
+
+set eventLocation to "WebEx"
+
+
+set theStartDate to (current date) + (1 * days)
+set hours of theStartDate to 12
+set minutes of theStartDate to 0
+set seconds of theStartDate to 0
+set theEndTime to theStartDate + (1 * hours)
+
+# SET THE MEETING INFORMATION TEXT OR HTML FOR THE WEBEX INVITE SURROUNDED BY QUOTES
+set theWebExInvite to "Put your text information for your meeting here, or use <html><h1>HTML Meeting Information </h1></html>"
+
+
+tell application "Microsoft Outlook"
+	activate
+	set newMeeting to make new calendar event with properties {start time:theStartDate, end time:theEndTime, is private:false, location:eventLocation, content:theWebExInvite, has reminder:true}
+	open newMeeting
+end tell
