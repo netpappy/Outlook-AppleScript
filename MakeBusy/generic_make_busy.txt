@@ -1,0 +1,24 @@
+(* The goal of this script is to make an event to mark your calendar busy for the next day.
+It will create the event, and all you have to do is save and close. That allows you to block your 
+calendar for another day if desired. I just named mine "make busy", so I can press CMD-SPACE and 
+type make busy to invoke this script.*)
+
+(* Update the <EXHANGE-EMAIL-ADDRESS> to just be your Exchange Email Address*)
+
+
+set eventLocation to "Office"
+set emailAddress to "<EXCHANGE-EMAIL-ADDRESS>"
+set theStartDate to (current date) + (1 * days)
+set hours of theStartDate to 7
+set minutes of theStartDate to 0
+set seconds of theStartDate to 0
+set theEndTime to theStartDate + (11 * hours)
+set theInvite to "Marking Calendar Busy"
+set theSubject to "BUSY"
+
+
+tell application "Microsoft Outlook"
+	activate
+	set newMeeting to make new calendar event with properties {start time:theStartDate, subject:theSubject, end time:theEndTime, is private:true, location:eventLocation, content:theInvite, has reminder:false}
+	open newMeeting
+end tell
