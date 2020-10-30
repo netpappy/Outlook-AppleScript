@@ -1,0 +1,45 @@
+(* The goal of this script is to create a 1 hour timeblock on my calendar
+for the OmniFocus Task that is currently highlighted. I have named the 
+script tb, so that I can type CMD-SPACE tb while in OmniFocus with a 
+task highlighted, and reserve time on my calendar with the relevant 
+task information. *)
+
+set theStartDate to (current date) + (1 * days)
+set hours of theStartDate to 12
+set minutes of theStartDate to 0
+set seconds of theStartDate to 0
+set theEndTime to theStartDate + (1 * hours)
+set eventLocation to "Office"
+set eventContent to "Timeblock for Task: " as string
+
+tell application "OmniFocus"
+	tell front document
+		tell document window 1 -- (first document window whose index is 1)
+			set theSelectedItems to selected trees of content
+			if ((count of theSelectedItems) ≠ 1) then
+				display alert "You must first select a task or project to create a time block for" message "Select a single task or project in the main outline." as warning
+				return
+			end if
+		end tell
+		set selectedItem to value of item 1 of theSelectedItems
+		set theTaskName to name of item 1 of theSelectedItems
+		set theTask to selectedItem
+		set theTaskNote to note of theTask
+		set theTaskDueDate to due date of theTask
+		if theTaskDueDate is missing value then
+			set theTaskDueDate to "No Due Date" as string
+		end if
+		
+		set eventSubject to eventContent & theTaskName
+		set eventContent to eventContent & theTaskName & "<br><br>Automated Script Creation " & "<br><br>" & theTaskDueDate & "<br>" & "<br> <br>" & theTaskNote
+		
+		
+		tell application "Microsoft Outlook"
+			activate
+			set newMeeting to make new calendar event with properties {subject:eventSubject, start time:theStartDate, end time:theEndTime, is private:true, location:eventLocation, content:eventContent, has reminder:true}
+			delay 0.5
+			open newMeeting
+			
+		end tell
+	end tell
+end tell
