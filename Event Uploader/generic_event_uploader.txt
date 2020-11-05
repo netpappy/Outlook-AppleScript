@@ -1,0 +1,109 @@
+(* The goal of this script is to allow you to create 
+multiple events from a spreadsheet.
+
+Update the email addresses to your desired recipients. I use
+3, so it is setup to have 3 email addresses, however, it is pretty
+easy to update if needed.
+
+Use the spreadsheet template to create your events. It is
+important to fill out every column for each item (yes put a start/end time
+even if you are going to mark it for all day). The time in the spreadsheet 
+is military time.
+
+The script will create all the items as private, because I use this for 
+my kids appointments and activities. I prefer to not have these "visible"
+on my work Outlook Calendar.
+
+After your spreasheet is filled out, and you have updated the email 
+addresses, you are ready to run the script. You should have the Excel file
+you created from the template open and active prior to running the script.
+I would make sure any other Excel files are closed. Then you can run the script.
+It is somewhat interactive. It will prompt to make sure you know the spreadsheet
+requirements prior to starting. It will pull the first item, build the meeting
+invitation, and then prompt you to send it. Just press <Enter> and then wait, 
+because it will grab the next item and build the meeting invitation, so you can 
+press <Enter> to send it. It will continue doing that until your spreadsheet
+items are exhausted. Don't use your computer for anything else while this is 
+running, because it will interfere with the running. It will take time to
+process a long list, but ultimately it will save a ton of time, because 
+making several items of the same thing ie "Dance Practice" is really fast in Excel.
+*)
+
+set emailAddress1 to "<EMAIL ADDRESS 1>"
+set emailAddress2 to "<EMAIL ADDRESS 2>"
+set emailAddress3 to "<EMAIL ADDRESS 3>"
+
+tell application "Microsoft Excel"
+	activate
+	set theWkbk to active workbook
+	set theWS to active sheet of theWkbk
+	set theRows to rows of (get used range of theWS)
+	set the item_count to the number of items in theRows
+	
+	set propslist to {}
+	
+	repeat with i from 1 to the item_count
+		set this_item to item i of theRows
+		set v to value of this_item
+		
+		if i is 1 then
+			# set AppleScript's text item delimeters to return
+			display dialog ("Hi, it's assumed that your columns headins are in order: Start Date, Time-Start, Time-End, Event Title, All Day, Location. Your headings are: " & return & v) buttons {"Cancel", "OK"} default button 2
+			# set AppleScript's text item delimeters to ""
+			
+		else
+			set v to value of row i of (get used range of theWS)
+			set theStartDate to item 1 of item 1 of v
+			set theStartTime to item 2 of item 1 of v
+			set theEndTime to item 3 of item 1 of v
+			set theStartDateTime to theStartDate + theStartTime * 24 * hours
+			log theStartDateTime
+			set theEndDateTime to theStartDate + theEndTime * 24 * hours
+			log theEndDateTime
+			set theSummary to text item 4 of item 1 of v
+			log theSummary
+			set theAllDayFlag to text item 5 of item 1 of v
+			log theAllDayFlag
+			set theLocation to text item 6 of item 1 of v
+			log theLocation
+			set theEventProps to {theStartDate, theStartDateTime, theEndDateTime, theSummary, theAllDayFlag, theLocation}
+			log theEventProps
+			set the end of propslist to theEventProps
+		end if
+	end repeat
+end tell
+
+tell application "Microsoft Outlook"
+	activate
+	delay 0.5
+	
+	repeat with theProps in propslist
+		
+		if item 5 of theProps is "T" then
+			set newMeeting to make new calendar event with properties {subject:item 4 of theProps, start time:item 1 of theProps, is private:true, end time:item 3 of theProps, location:item 6 of theProps, content:"Automated script", all day flag:true, has reminder:false}
+			
+		else
+			set newMeeting to make new calendar event with properties {subject:item 4 of theProps, start time:item 2 of theProps, end time:item 3 of theProps, is private:true, location:item 6 of theProps, content:"Automated script", has reminder:false}
+			
+		end if
+		delay 4
+		make new required attendee at newMeeting with properties {email address:{address:emailAddress1}}
+		make new required attendee at newMeeting with properties {email address:{address:emailAddress2}}
+		make new required attendee at newMeeting with properties {email address:{address:emailAddress3}}
+		
+		open newMeeting
+		
+		delay 2
+		
+		display dialog ("Should I send this event?") buttons {"Cancel", "OK"} default button 2
+		open newMeeting
+		delay 2
+		tell application "System Events" to key code 36 using {command down}
+		
+		delay 2
+		
+		
+	end repeat
+end tell
+
+
